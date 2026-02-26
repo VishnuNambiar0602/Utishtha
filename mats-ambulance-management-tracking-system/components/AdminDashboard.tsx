@@ -2,11 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { getDispatchRecommendation } from '../services/geminiService';
-import { Ambulance, Trip, TripStatus, Hospital, DispatchRecommendation, AmbulanceStatus } from '../types';
+import { Ambulance, Trip, TripStatus, Hospital, DispatchRecommendation, AmbulanceStatus, EmergencyCallAnalysis } from '../types';
 import { HOSPITALS } from '../constants';
 import MapView from './MapView';
+import EmergencyCallIntake from './EmergencyCallIntake';
+
+type ViewMode = 'dispatch' | 'call-analyzer';
 
 const AdminDashboard: React.FC = () => {
+  const [viewMode, setViewMode] = useState<ViewMode>('dispatch');
   const [ambulances, setAmbulances] = useState<Ambulance[]>(api.getAmbulances());
   const [trips, setTrips] = useState<Trip[]>(api.getTrips());
   const [isDispatching, setIsDispatching] = useState(false);
@@ -89,10 +93,86 @@ const AdminDashboard: React.FC = () => {
 
   const availableAmbulances = ambulances.filter(a => a.status === AmbulanceStatus.AVAILABLE);
 
+  const handleCallAnalysisComplete = (analysis: EmergencyCallAnalysis) => {
+    // Auto-populate form from AI analysis
+    setFormData({
+      patient_name: analysis.patient.name || '',
+      patient_phone: '', // Phone number can be added to UI if needed
+      incident_desc: analysis.emergency.description || '',
+      lat: formData.lat, // Keep current location (could be geocoded from address in future)
+      lng: formData.lng
+    });
+    
+    // Switch to dispatch view and open the dispatch modal
+    setViewMode('dispatch');
+    setIsDispatching(true);
+    
+    // Auto-trigger AI recommendation for HIGH priority cases
+    // Autonomous dispatch authorization is indicated in the analysis but still requires human confirmation in UI
+    if (analysis.triage.priority === 'HIGH' || analysis.automation_decision.auto_dispatch_allowed) {
+      setTimeout(() => handleRequestDispatch(), 500);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-slate-100 overflow-hidden">
+      {/* Top Navigation Bar */}
+      <div className="absolute top-0 left-0 right-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+        <div className="flex items-center justify-between px-6 py-3">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-rose-600 rounded-lg flex items-center justify-center">
+                <i className="fa-solid fa-tower-broadcast text-white text-sm"></i>
+              </div>
+              <div>
+                <h1 className="text-sm font-black text-slate-900 uppercase">MATS OS</h1>
+                <p className="text-[9px] text-slate-500 uppercase tracking-wider">Admin Portal</p>
+              </div>
+            </div>
+            
+            <div className="flex gap-2 bg-slate-100 p-1 rounded-lg">
+              <button
+                onClick={() => setViewMode('dispatch')}
+                className={`px-4 py-2 rounded-md text-xs font-bold uppercase tracking-wide transition-all ${
+                  viewMode === 'dispatch'
+                    ? 'bg-white text-rose-600 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <i className="fa-solid fa-map-location-dot mr-2"></i>
+                Dispatch Center
+              </button>
+              <button
+                onClick={() => setViewMode('call-analyzer')}
+                className={`px-4 py-2 rounded-md text-xs font-bold uppercase tracking-wide transition-all ${
+                  viewMode === 'call-analyzer'
+                    ? 'bg-white text-rose-600 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <i className="fa-solid fa-phone-volume mr-2"></i>
+                AI Call Analyzer
+              </button>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+              <span className="text-[10px] font-bold text-emerald-700 uppercase">System Online</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {viewMode === 'call-analyzer' ? (
+        <div className="w-full mt-16 overflow-y-auto">
+          <EmergencyCallIntake onAnalysisComplete={handleCallAnalysisComplete} />
+        </div>
+      ) : (
+        <>
       {/* Sidebar - Requests and Active Trips */}
-      <div className="w-96 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col shadow-xl">
+      <div className="w-96 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col shadow-xl mt-16">
         <div className="p-6 border-b bg-rose-600 text-white flex justify-between items-center">
           <div>
             <h1 className="text-xl font-bold">MATS Dispatch</h1>
@@ -323,6 +403,8 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

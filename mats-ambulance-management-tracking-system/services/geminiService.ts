@@ -8,7 +8,7 @@ export const getDispatchRecommendation = async (
   hospitals: Hospital[],
   incidentDescription: string
 ): Promise<DispatchRecommendation> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
   
   const prompt = `
     Emergency incident: ${incidentDescription}
