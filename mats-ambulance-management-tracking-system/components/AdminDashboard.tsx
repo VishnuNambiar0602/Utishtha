@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { getDispatchRecommendation } from '../services/geminiService';
+import { geocodeAddress } from '../services/geocoding';
 import { Ambulance, Trip, TripStatus, Hospital, DispatchRecommendation, AmbulanceStatus, EmergencyCallAnalysis } from '../types';
 import { HOSPITALS } from '../constants';
 import MapView from './MapView';
@@ -15,6 +16,7 @@ const AdminDashboard: React.FC = () => {
   const [trips, setTrips] = useState<Trip[]>(api.getTrips());
   const [isDispatching, setIsDispatching] = useState(false);
   const [loadingAI, setLoadingAI] = useState(false);
+  const [geocodingLoading, setGeocodingLoading] = useState(false);
   const [manualAmbulanceId, setManualAmbulanceId] = useState<string | null>(null);
   
   // New Trip Form State
@@ -22,11 +24,35 @@ const AdminDashboard: React.FC = () => {
     patient_name: '',
     patient_phone: '',
     incident_desc: '',
-    lat: 34.05,
-    lng: -118.25
+    pickup_address: '',  // Text address to geocode
+    lat: 12.9716,  // Bangalore, Karnataka
+    lng: 77.5946
   });
 
   const [aiRec, setAiRec] = useState<DispatchRecommendation | null>(null);
+
+  const handleGeocodeAddress = async () => {
+    if (!formData.pickup_address || formData.pickup_address.trim().length === 0) {
+      alert('Please enter a location address first');
+      return;
+    }
+
+    setGeocodingLoading(true);
+    try {
+      const result = await geocodeAddress(formData.pickup_address);
+      if (result) {
+        setFormData({...formData, lat: result.location.lat, lng: result.location.lng});
+        alert(`Location found:\n${result.formattedAddress}`);
+      } else {
+        alert('Could not find location. Please try a different address or use coordinates.');
+      }
+    } catch (err) {
+      console.error('Geocoding error:', err);
+      alert('Geocoding failed. Please try again or enter coordinates manually.');
+    } finally {
+      setGeocodingLoading(false);
+    }
+  };
 
   useEffect(() => {
     api.refresh?.();
@@ -34,11 +60,14 @@ const AdminDashboard: React.FC = () => {
       if (event.type === 'AMBULANCE_UPDATES') setAmbulances([...event.data]);
       if (event.type === 'TRIP_UPDATED' || event.type === 'TRIP_CREATED') setTrips(api.getTrips());
     });
+    
+    // More frequent refresh for real-time GPS tracking (every 2 seconds)
     const refreshId = window.setInterval(() => {
       api.refresh?.();
       setAmbulances(api.getAmbulances());
       setTrips(api.getTrips());
-    }, 5000);
+    }, 2000);
+    
     return () => {
       unsub();
       window.clearInterval(refreshId);
@@ -72,6 +101,8 @@ const AdminDashboard: React.FC = () => {
         patient_name: formData.patient_name,
         patient_phone: formData.patient_phone,
         pickup_location: { lat: formData.lat, lng: formData.lng },
+        pickup_address: formData.pickup_address,  // Store the text address
+        incident_description: formData.incident_desc,  // Store incident details
         hospital_name: hospital.name,
         hospital_location: hospital.location,
         priority: 'high'
@@ -88,10 +119,24 @@ const AdminDashboard: React.FC = () => {
     setIsDispatching(false);
     setAiRec(null);
     setManualAmbulanceId(null);
-    setFormData({ patient_name: '', patient_phone: '', incident_desc: '', lat: 34.05, lng: -118.25 });
+    setFormData({ patient_name: '', patient_phone: '', incident_desc: '', pickup_address: '', lat: 12.9716, lng: 77.5946 });
   };
 
   const availableAmbulances = ambulances.filter(a => a.status === AmbulanceStatus.AVAILABLE);
+
+  const handleMarkComplete = async (tripId: string) => {
+    if (!confirm('Mark this trip as completed? This will free up the ambulance.')) {
+      return;
+    }
+    try {
+      await api.updateTripStatus(tripId, TripStatus.COMPLETED);
+      // Refresh trips list
+      setTrips(api.getTrips());
+    } catch (err) {
+      console.error(err);
+      alert('Failed to mark trip as complete.');
+    }
+  };
 
   const handleCallAnalysisComplete = (analysis: EmergencyCallAnalysis) => {
     // Auto-populate form from AI analysis
@@ -212,6 +257,12 @@ const AdminDashboard: React.FC = () => {
                   <span>Assigned: {trip.ambulance_id}</span>
                 </div>
               )}
+              <button
+                onClick={() => handleMarkComplete(trip.id)}
+                className="w-full mt-3 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-bold py-2 rounded-lg transition-all active:scale-95 uppercase tracking-wide"
+              >
+                ✓ Mark Complete
+              </button>
             </div>
           ))}
 
@@ -230,8 +281,8 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Main Map View */}
-      <div className="flex-1 relative flex flex-col">
-        <div className="flex-1 p-4">
+      <div className="flex-1 relative flex flex-col" style={{ minHeight: '600px' }}>
+        <div className="flex-1 p-4" style={{ minHeight: '500px' }}>
           <MapView 
             ambulances={ambulances} 
             activeTrips={trips.filter(t => t.status !== TripStatus.COMPLETED)} 
@@ -250,6 +301,7 @@ const AdminDashboard: React.FC = () => {
                 <th className="pb-2 font-medium">Hospital</th>
                 <th className="pb-2 font-medium">Status</th>
                 <th className="pb-2 font-medium">Time</th>
+                <th className="pb-2 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -267,6 +319,17 @@ const AdminDashboard: React.FC = () => {
                     </span>
                   </td>
                   <td className="py-2 text-slate-500">{new Date(trip.start_time).toLocaleTimeString()}</td>
+                  <td className="py-2">
+                    {trip.status !== TripStatus.COMPLETED && (
+                      <button
+                        onClick={() => handleMarkComplete(trip.id)}
+                        className="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1 rounded text-[10px] font-bold transition-all"
+                        title="Mark trip as complete"
+                      >
+                        ✓ Complete
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -276,7 +339,7 @@ const AdminDashboard: React.FC = () => {
 
       {/* Dispatch Modal Overlay */}
       {isDispatching && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-6">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b flex justify-between items-center bg-rose-50 rounded-t-2xl">
               <h2 className="text-xl font-black text-rose-700">EMERGENCY DISPATCH PANEL</h2>
@@ -314,6 +377,38 @@ const AdminDashboard: React.FC = () => {
                   value={formData.incident_desc}
                   onChange={e => setFormData({...formData, incident_desc: e.target.value})}
                 />
+              </div>
+
+              {/* Location Input with Geocoding */}
+              <div className="space-y-3 bg-blue-50 p-4 rounded-xl border border-blue-200">
+                <div className="flex items-center gap-2 text-blue-700 font-bold text-xs uppercase">
+                  <i className="fa-solid fa-map-marker-alt"></i>
+                  <span>Patient Location</span>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase">Address / Landmark</label>
+                  <input 
+                    className="w-full border rounded-lg px-3 py-2 outline-blue-500"
+                    placeholder="e.g., MG Road, Bangalore or Coordinates: 12.9716, 77.5946"
+                    value={formData.pickup_address}
+                    onChange={e => setFormData({...formData, pickup_address: e.target.value})}
+                  />
+                </div>
+                <button
+                  onClick={handleGeocodeAddress}
+                  disabled={geocodingLoading || !formData.pickup_address}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                >
+                  {geocodingLoading ? (
+                    <><i className="fa-solid fa-spinner animate-spin"></i><span>Locating...</span></>
+                  ) : (
+                    <><i className="fa-solid fa-search-location"></i><span>Find Location on Map</span></>
+                  )}
+                </button>
+                <div className="text-[10px] text-slate-600 bg-white/50 p-2 rounded">
+                  <div className="font-bold mb-1">Current Coordinates:</div>
+                  <div className="font-mono">Lat: {formData.lat.toFixed(6)}, Lng: {formData.lng.toFixed(6)}</div>
+                </div>
               </div>
 
               {!aiRec && !manualAmbulanceId && (

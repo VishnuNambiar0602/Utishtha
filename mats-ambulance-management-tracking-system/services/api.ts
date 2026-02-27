@@ -174,6 +174,34 @@ class SupabaseBackend {
       .eq('id', ambulanceId);
     await this.refresh();
   }
+
+  async saveGPSLocation(ambulanceId: string, data: {
+    latitude: number;
+    longitude: number;
+    accuracy?: number;
+    speed?: number;
+    heading?: number;
+    battery_level?: number;
+  }) {
+    await this.initPromise;
+    // Save to GPS tracking table
+    await supabase.from('gps_locations').insert({
+      ambulance_id: ambulanceId,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      accuracy: data.accuracy,
+      speed: data.speed,
+      heading: data.heading,
+      battery_level: data.battery_level,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Also update the ambulance's current location
+    await this.updateAmbulanceLocation(ambulanceId, {
+      lat: data.latitude,
+      lng: data.longitude
+    });
+  }
 }
 
 export const api = new SupabaseBackend();

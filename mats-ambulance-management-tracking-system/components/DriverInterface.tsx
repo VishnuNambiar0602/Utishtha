@@ -2,11 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { Ambulance, Trip, TripStatus, AmbulanceStatus } from '../types';
+import DriverMapView from './DriverMapView';
 
 const VendorPortal: React.FC = () => {
   const [currentAmbulanceId, setCurrentAmbulanceId] = useState<string>('AMB-001');
   const [ambulance, setAmbulance] = useState<Ambulance | null>(null);
   const [activeTrip, setActiveTrip] = useState<Trip | null>(null);
+  const [gpsActive, setGpsActive] = useState<boolean>(false);
+  const [batteryLevel, setBatteryLevel] = useState<number>(100);
+  const [showMap, setShowMap] = useState<boolean>(false);
 
   useEffect(() => {
     api.refresh?.();
@@ -14,6 +18,7 @@ const VendorPortal: React.FC = () => {
       const amb = api.getAmbulances().find(a => a.id === currentAmbulanceId) || null;
       setAmbulance(amb);
       const trip = api.getTrips().find(t => t.ambulance_id === currentAmbulanceId && t.status !== TripStatus.COMPLETED) || null;
+      console.log('🚑 VENDOR SYNC:', { currentAmbulanceId, allTrips: api.getTrips(), foundTrip: trip });
       setActiveTrip(trip);
     };
 
@@ -27,16 +32,40 @@ const VendorPortal: React.FC = () => {
       sync();
     }, 5000);
     
-    // Simulate real GPS location from device
+    // Enhanced GPS tracking with battery monitoring
     const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        api.updateAmbulanceLocation(currentAmbulanceId, {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude
+      async (pos) => {
+        setGpsActive(true);
+        
+        // Get battery level if available
+        if ('getBattery' in navigator) {
+          try {
+            const battery = await (navigator as any).getBattery();
+            setBatteryLevel(Math.round(battery.level * 100));
+          } catch (e) {
+            // Battery API not available
+          }
+        }
+        
+        // Save GPS location with full details
+        await api.saveGPSLocation(currentAmbulanceId, {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+          speed: pos.coords.speed || undefined,
+          heading: pos.coords.heading || undefined,
+          battery_level: batteryLevel
         });
       },
-      (err) => console.warn("GPS Access Denied"),
-      { enableHighAccuracy: true }
+      (err) => {
+        console.warn("GPS Access Denied:", err);
+        setGpsActive(false);
+      },
+      { 
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
     );
 
     return () => {
@@ -44,7 +73,7 @@ const VendorPortal: React.FC = () => {
       navigator.geolocation.clearWatch(watchId);
       window.clearInterval(refreshId);
     };
-  }, [currentAmbulanceId]);
+  }, [currentAmbulanceId, batteryLevel]);
 
   const updateStatus = (status: TripStatus) => {
     if (activeTrip) {
@@ -69,11 +98,23 @@ const VendorPortal: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 p-6 space-y-6">
+      <div className="flex-1 p-6 space-y-6 overflow-y-auto">
         {activeTrip ? (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-            <div className="bg-slate-800 rounded-2xl p-6 border-l-4 border-rose-500 shadow-2xl">
-              <div className="flex justify-between items-start mb-4">
+            {/* Map View - Show after clicking MARK ENROUTE */}
+            {showMap && ambulance && activeTrip && (
+              <div style={{ height: '400px', width: '100%' }} className="rounded-xl overflow-hidden border-2 border-slate-700">
+                <DriverMapView 
+                  currentLocation={ambulance.location}
+                  pickupLocation={activeTrip.pickup_location}
+                  hospitalLocation={activeTrip.hospital_location}
+                  pickupAddress={activeTrip.pickup_address}
+                  patientCondition={activeTrip.incident_description}
+                />
+              </div>
+            )}
+
+            <div className="bg-slate-800 rounded-2xl p-6 border-l-4 border-rose-500 shadow-2xl">\n              <div className="flex justify-between items-start mb-4">
                 <h2 className="text-2xl font-bold">New Mission</h2>
                 <span className="bg-rose-500/20 text-rose-400 text-xs px-2 py-1 rounded uppercase font-black tracking-widest">CRITICAL</span>
               </div>
@@ -101,28 +142,61 @@ const VendorPortal: React.FC = () => {
 
               <div className="mt-8 grid grid-cols-1 gap-3">
                 {activeTrip.status === TripStatus.ASSIGNED && (
-                  <button 
-                    onClick={() => updateStatus(TripStatus.ENROUTE)}
-                    className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-black py-4 rounded-xl shadow-lg transition-all active:scale-95 text-lg"
-                  >
-                    MARK ENROUTE
-                  </button>
+                  <>
+                    <button 
+                      onClick={() => {
+                        setShowMap(true);
+                        updateStatus(TripStatus.ENROUTE);
+                      }}
+                      className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-black py-4 rounded-xl shadow-lg transition-all active:scale-95 text-lg"
+                    >
+                      🗺️ MARK ENROUTE & SHOW MAP
+                    </button>
+                    {!showMap && (
+                      <button 
+                        onClick={() => setShowMap(true)}
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-black py-3 rounded-xl shadow-lg transition-all active:scale-95 text-sm"
+                      >
+                        📍 VIEW DIRECTIONS
+                      </button>
+                    )}
+                  </>
                 )}
                 {activeTrip.status === TripStatus.ENROUTE && (
-                  <button 
-                    onClick={() => updateStatus(TripStatus.ARRIVED)}
-                    className="w-full bg-rose-500 hover:bg-rose-600 text-white font-black py-4 rounded-xl shadow-lg transition-all active:scale-95 text-lg"
-                  >
-                    ARRIVED AT PICKUP
-                  </button>
+                  <>
+                    {!showMap && (
+                      <button 
+                        onClick={() => setShowMap(true)}
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-black py-3 rounded-xl shadow-lg transition-all active:scale-95 text-sm mb-3"
+                      >
+                        📍 SHOW MAP & DIRECTIONS
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => updateStatus(TripStatus.ARRIVED)}
+                      className="w-full bg-rose-500 hover:bg-rose-600 text-white font-black py-4 rounded-xl shadow-lg transition-all active:scale-95 text-lg"
+                    >
+                      ARRIVED AT PICKUP
+                    </button>
+                  </>
                 )}
                 {activeTrip.status === TripStatus.ARRIVED && (
-                  <button 
-                    onClick={() => updateStatus(TripStatus.COMPLETED)}
-                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-xl shadow-lg transition-all active:scale-95 text-lg"
-                  >
-                    DELIVERED TO HOSPITAL
-                  </button>
+                  <>
+                    {!showMap && (
+                      <button 
+                        onClick={() => setShowMap(true)}
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-black py-3 rounded-xl shadow-lg transition-all active:scale-95 text-sm mb-3"
+                      >
+                        📍 SHOW ROUTE TO HOSPITAL
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => updateStatus(TripStatus.COMPLETED)}
+                      className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-xl shadow-lg transition-all active:scale-95 text-lg"
+                    >
+                      DELIVERED TO HOSPITAL
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -147,8 +221,20 @@ const VendorPortal: React.FC = () => {
 
       <div className="p-4 bg-slate-800/80 border-t border-slate-700 backdrop-blur-md">
         <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-          <span>GPS Active</span>
-          <span>Battery: 85%</span>
+          <span className="flex items-center gap-2">
+            {gpsActive ? (
+              <>
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                GPS Active
+              </>
+            ) : (
+              <>
+                <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                GPS Inactive
+              </>
+            )}
+          </span>
+          <span>Battery: {batteryLevel}%</span>
         </div>
       </div>
     </div>

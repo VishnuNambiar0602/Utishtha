@@ -26,8 +26,25 @@ create table if not exists public.trips (
 create index if not exists trips_ambulance_id_idx on public.trips(ambulance_id);
 create index if not exists trips_status_idx on public.trips(status);
 
+-- GPS Location tracking table for real-time ambulance tracking
+create table if not exists public.gps_locations (
+  id uuid primary key default gen_random_uuid(),
+  ambulance_id text references public.ambulances(id),
+  latitude double precision not null,
+  longitude double precision not null,
+  accuracy double precision,
+  speed double precision,
+  heading double precision,
+  battery_level integer,
+  timestamp timestamptz not null default now()
+);
+
+create index if not exists gps_locations_ambulance_id_idx on public.gps_locations(ambulance_id);
+create index if not exists gps_locations_timestamp_idx on public.gps_locations(timestamp desc);
+
 alter table public.ambulances enable row level security;
 alter table public.trips enable row level security;
+alter table public.gps_locations enable row level security;
 
 create policy "Allow anon read/write ambulances"
   on public.ambulances
@@ -38,6 +55,13 @@ create policy "Allow anon read/write ambulances"
 
 create policy "Allow anon read/write trips"
   on public.trips
+  for all
+  to anon
+  using (true)
+  with check (true);
+
+create policy "Allow anon read/write gps_locations"
+  on public.gps_locations
   for all
   to anon
   using (true)

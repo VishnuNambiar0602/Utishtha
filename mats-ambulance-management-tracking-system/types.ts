@@ -50,6 +50,8 @@ export interface Trip {
   patient_name: string;
   patient_phone: string;
   pickup_location: Location;
+  pickup_address?: string;  // Text address entered by admin
+  incident_description?: string;  // Emergency details/condition
   hospital_name: string;
   hospital_location: Location;
   status: TripStatus;
