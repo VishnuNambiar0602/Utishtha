@@ -205,6 +205,114 @@ export function calculateSymptomDuration(startTime: string): number {
   return Math.max(1, roundedDays);
 }
 
+function createOfflineFallbackDiagnosis(tripData: Trip): DiagnosisResponse {
+  const incidentText = tripData.incident_description?.trim() || 'No incident description provided';
+  const symptoms = incidentText
+    .split(/[,.\n;]+/)
+    .map(part => part.trim())
+    .filter(part => part.length > 0)
+    .slice(0, 5);
+
+  const normalizedSymptoms = symptoms.length > 0 ? symptoms : ['general medical emergency'];
+  const days = calculateSymptomDuration(tripData.start_time);
+
+  return {
+    input_symptoms: normalizedSymptoms,
+    total_matches: 1,
+    days,
+    analysis_type: 'standard',
+    diseases: [
+      {
+        name: 'Preliminary Assessment (Offline Mode)',
+        disease_id: 'offline-preliminary-assessment',
+        confidence: 35,
+        confidence_level: 'Low',
+        explanation: 'The medical diagnosis API was unavailable at download time. This report was generated using incident notes only and should be treated as a preliminary summary until full AI analysis is available.',
+        matched_symptoms: normalizedSymptoms,
+        all_symptoms: normalizedSymptoms,
+        xai: {
+          scoring_breakdown: {
+            tfidf_component: 0,
+            tfidf_weight: 0,
+            match_component: 0,
+            match_weight: 0,
+            final_score: 0,
+            tfidf_details: {
+              tfidf_similarity: 0,
+              matched_symptoms_count: normalizedSymptoms.length,
+              total_disease_symptoms: normalizedSymptoms.length,
+              match_bonus: 0,
+              unmatched_disease_symptoms: []
+            },
+            match_ratio: 0,
+            matched_count: normalizedSymptoms.length
+          },
+          explanation: {
+            title: 'Offline fallback assessment',
+            main_reason: 'Network/API unavailable during report generation.',
+            scoring_components: {
+              text_similarity: {
+                label: 'Text Similarity',
+                score: 0,
+                explanation: 'AI scoring unavailable in offline mode.',
+                weight: '0%'
+              },
+              symptom_match: {
+                label: 'Symptom Match',
+                score: 0,
+                explanation: 'AI scoring unavailable in offline mode.',
+                weight: '0%'
+              }
+            },
+            matched_symptoms: normalizedSymptoms,
+            unmatched_disease_symptoms: [],
+            overall_confidence: 35,
+            confidence_level: 'Low',
+            summary: 'Preliminary offline summary generated from incident description.'
+          },
+          symptom_analysis: {
+            reported_and_match: {
+              count: normalizedSymptoms.length,
+              symptoms: normalizedSymptoms,
+              description: 'Symptoms were extracted from incident notes in offline mode.'
+            },
+            disease_expects_but_not_reported: {
+              count: 0,
+              symptoms: [],
+              more_count: 0,
+              description: 'Not available in offline mode.'
+            },
+            coverage: {
+              percentage: 0,
+              text: 'Offline mode - AI coverage unavailable.'
+            }
+          },
+          feature_importance: normalizedSymptoms.map(symptom => ({
+            symptom,
+            importance: 0,
+            contribution: 'Low' as const,
+            explanation: 'Derived from incident notes in offline mode.'
+          }))
+        }
+      }
+    ],
+    differential_diagnosis: {
+      is_differential: false,
+      explanation: 'Differential diagnosis unavailable while diagnosis API is offline.'
+    },
+    confidence_check: {
+      is_reliable: false,
+      confidence_status: 'LOW_CONFIDENCE',
+      confidence_message: 'Preliminary offline report. Please regenerate when diagnosis API is available.',
+      recommendations: [
+        'Use this report as a temporary summary only.',
+        'Regenerate report when diagnosis service is available.',
+        'Seek immediate clinical review for critical symptoms.'
+      ]
+    } as any
+  };
+}
+
 /**
  * Call GRASP2026 diagnosis API with symptoms and duration
  * 
@@ -877,6 +985,21 @@ export async function getStoredDiagnosticData(incidentId: string): Promise<Diagn
   }
 }
 
+async function downloadPdfFromUrl(reportUrl: string): Promise<Blob> {
+  const response = await fetch(reportUrl, { method: 'GET' });
+
+  if (!response.ok) {
+    throw new Error(`Failed to download existing report file: ${response.status} ${response.statusText}`);
+  }
+
+  const blob = await response.blob();
+  if (!blob || blob.size === 0) {
+    throw new Error('Existing report file is empty or unavailable');
+  }
+
+  return blob;
+}
+
 /**
  * Download a medical report by regenerating PDF from stored diagnostic data
  * 
@@ -895,10 +1018,56 @@ export async function downloadMedicalReport(
   try {
     console.log('Downloading medical report for incident:', incidentId);
     
-    // Step 1: Retrieve stored diagnostic data
+    // Step 1: Retrieve stored diagnostic data (or generate if missing)
     console.log('Step 1: Retrieving stored diagnostic data...');
-    const diagnosticData = await getStoredDiagnosticData(incidentId);
-    console.log('✓ Diagnostic data retrieved');
+    let diagnosticData: DiagnosisResponse;
+    
+    try {
+      diagnosticData = await getStoredDiagnosticData(incidentId);
+      console.log('✓ Diagnostic data retrieved');
+    } catch (storedDataError) {
+      const message = storedDataError instanceof Error ? storedDataError.message : '';
+      const isMissingStoredReport =
+        message.toLowerCase().includes('no medical report found') ||
+        message.toLowerCase().includes('no diagnostic data found');
+
+      if (!isMissingStoredReport) {
+        throw storedDataError;
+      }
+
+      // Backward compatibility: if legacy schema has stored PDF URL, download it directly
+      try {
+        const existingReports = await getMedicalReports(incidentId);
+        const legacyReport = existingReports.find(report => {
+          const reportUrl = (report as any)?.report_url;
+          return typeof reportUrl === 'string' && reportUrl.trim().length > 0;
+        });
+
+        const legacyReportUrl = (legacyReport as any)?.report_url as string | undefined;
+        if (legacyReportUrl) {
+          console.log('Found legacy report_url. Downloading existing PDF from storage...');
+          const legacyPdfBlob = await downloadPdfFromUrl(legacyReportUrl);
+          console.log('✓ Legacy PDF downloaded successfully');
+          return legacyPdfBlob;
+        }
+      } catch (legacyDownloadError) {
+        console.warn('Legacy report_url download path failed; continuing with regeneration fallback:', legacyDownloadError);
+      }
+
+      console.warn('No stored report data found. Generating report data on-demand for incident:', incidentId);
+
+      const generatedReport = await generateMedicalReport(tripData);
+      if (generatedReport.success && generatedReport.diagnosticData) {
+        diagnosticData = generatedReport.diagnosticData;
+        console.log('✓ Diagnostic data generated and ready for download');
+      } else {
+        const generationError = generatedReport.error || 'Failed to generate medical report data for download';
+
+        console.warn('Medical report generation failed. Using offline fallback report generation for incident:', incidentId, 'Error:', generationError);
+        diagnosticData = createOfflineFallbackDiagnosis(tripData);
+        console.log('✓ Offline fallback diagnostic data created');
+      }
+    }
     
     // Step 2: Generate PDF from stored data
     console.log('Step 2: Generating PDF from stored diagnostic data...');
