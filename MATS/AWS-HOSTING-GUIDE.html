@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 MATS AWS Hosting Guide - Super Simple!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8;
+            color: #2d3748;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px;
+        }
+        .section {
+            margin-bottom: 50px;
+            padding: 30px;
+            background: #f7fafc;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+        .section h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .section h3 {
+            color: #4c51bf;
+            font-size: 1.5em;
+            margin: 25px 0 15px 0;
+            padding-left: 20px;
+            border-left: 3px solid #9f7aea;
+        }
+        .step {
+            background: white;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-right: 15px;
+        }
+        .code-block {
+            background: #1a202c;
+            color: #68d391;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-size: 0.95em;
+        }
+        .warning {
+            background: #fff5f5;
+            border-left: 5px solid #fc8181;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .warning strong {
+            color: #c53030;
+            font-size: 1.1em;
+        }
+        .success {
+            background: #f0fff4;
+            border-left: 5px solid #48bb78;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .success strong {
+            color: #22543d;
+            font-size: 1.1em;
+        }
+        .info {
+            background: #ebf8ff;
+            border-left: 5px solid #4299e1;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .info strong {
+            color: #2c5282;
+            font-size: 1.1em;
+        }
+        ul, ol {
+            margin-left: 30px;
+            margin-top: 10px;
+        }
+        li {
+            margin: 10px 0;
+        }
+        .checklist {
+            list-style: none;
+            margin-left: 0;
+        }
+        .checklist li {
+            padding-left: 35px;
+            position: relative;
+        }
+        .checklist li:before {
+            content: "☐";
+            position: absolute;
+            left: 0;
+            font-size: 1.5em;
+            color: #667eea;
+        }
+        .emoji {
+            font-size: 1.5em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border: 1px solid #e2e8f0;
+        }
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background: #f7fafc;
+        }
+        .button {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        .button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .toc {
+            background: #edf2f7;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+        }
+        .toc h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+        .toc ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        .toc li {
+            margin: 10px 0;
+        }
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.1em;
+        }
+        .toc a:hover {
+            color: #5a67d8;
+            text-decoration: underline;
+        }
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 MATS AWS Hosting Guide</h1>
+            <p>Step-by-Step Guide for Hosting Your Ambulance Management System on AWS</p>
+            <p style="font-size: 1em; margin-top: 10px;">So simple, even a 5-year-old can follow! 🎉</p>
+        </div>
+
+        <div class="content">
+            <!-- Table of Contents -->
+            <div class="toc">
+                <h2>📋 Table of Contents</h2>
+                <ul>
+                    <li><a href="#overview">1. What You're Building</a></li>
+                    <li><a href="#prerequisites">2. What You Need Before Starting</a></li>
+                    <li><a href="#architecture">3. How Everything Works Together</a></li>
+                    <li><a href="#supabase">4. Setting Up Supabase (Database)</a></li>
+                    <li><a href="#grasp">5. Deploying GRASP2026 Backend (Medical AI)</a></li>
+                    <li><a href="#frontend">6. Deploying MATS Frontend (Website)</a></li>
+                    <li><a href="#domain">7. Setting Up Your Domain Name</a></li>
+                    <li><a href="#testing">8. Testing Everything</a></li>
+                    <li><a href="#monitoring">9. Monitoring & Maintenance</a></li>
+                    <li><a href="#costs">10. Cost Breakdown</a></li>
+                    <li><a href="#troubleshooting">11. Common Problems & Solutions</a></li>
+                </ul>
+            </div>
+
+            <!-- Section 1: Overview -->
+            <div class="section" id="overview">
+                <h2><span class="emoji">🎯</span> What You're Building</h2>
+                
+                <p>MATS (Medical Ambulance Tracking System) is a web application with 3 main parts:</p>
+                
+                <div class="step">
+                    <h3>🌐 Part 1: Frontend Website (MATS)</h3>
+                    <p>This is what users see and interact with:</p>
+                    <ul>
+                        <li>Admin dashboard to manage ambulances</li>
+                        <li>Driver interface to accept trips</li>
+                        <li>Real-time GPS tracking on maps</li>
+                        <li>Emergency call intake system</li>
+                        <li>Medical report generation</li>
+                    </ul>
+                    <p><strong>Technology:</strong> React + TypeScript (just HTML, CSS, JavaScript files)</p>
+                    <p><strong>Where it goes:</strong> AWS S3 + CloudFront (like a super-fast file storage)</p>
+                </div>
+
+                <div class="step">
+                    <h3>🤖 Part 2: GRASP2026 Backend (Medical AI)</h3>
+                    <p>This is the smart medical diagnosis system:</p>
+                    <ul>
+                        <li>Analyzes patient symptoms</li>
+                        <li>Suggests possible diseases</li>
+                        <li>Provides AI explanations (XAI)</li>
+                        <li>Generates medical reports</li>
+                    </ul>
+                    <p><strong>Technology:</strong> Python Flask API</p>
+                    <p><strong>Where it goes:</strong> AWS EC2 (a virtual computer in the cloud)</p>
+                </div>
+
+                <div class="step">
+                    <h3>💾 Part 3: Supabase (Database & Storage)</h3>
+                    <p>This stores all your data:</p>
+                    <ul>
+                        <li>Ambulance information</li>
+                        <li>Trip/incident records</li>
+                        <li>GPS tracking history</li>
+                        <li>Medical report PDFs</li>
+                        <li>Real-time updates</li>
+                    </ul>
+                    <p><strong>Technology:</strong> PostgreSQL database + File storage</p>
+                    <p><strong>Where it goes:</strong> Supabase Cloud (managed service, no AWS needed)</p>
+                </div>
+
+                <div class="info">
+                    <strong>💡 Simple Analogy:</strong>
+                    <p>Think of it like a restaurant:</p>
+                    <ul>
+                        <li><strong>Frontend (S3/CloudFront)</strong> = The dining area where customers sit</li>
+                        <li><strong>Backend (EC2)</strong> = The kitchen where food is prepared</li>
+                        <li><strong>Database (Supabase)</strong> = The pantry where ingredients are stored</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section 2: Prerequisites -->
+            <div class="section" id="prerequisites">
+                <h2><span class="emoji">📦</span> What You Need Before Starting</h2>
+                
+                <h3>1. Accounts You Need to Create (All Free to Start!)</h3>
+                <ul class="checklist">
+                    <li><strong>AWS Account</strong> - <a href="https://aws.amazon.com/free/" target="_blank">aws.amazon.com/free</a>
+                        <br>Free tier includes: 5GB S3 storage, 50GB CloudFront data transfer, 750 hours EC2 per month
+                    </li>
+                    <li><strong>Supabase Account</strong> - <a href="https://supabase.com/" target="_blank">supabase.com</a>
+                        <br>Free tier includes: 500MB database, 1GB file storage, unlimited API requests
+                    </li>
+                    <li><strong>Google Cloud Account</strong> - <a href="https://console.cloud.google.com/" target="_blank">console.cloud.google.com</a>
+                        <br>Needed for: Gemini AI API key (free tier available)
+                    </li>
+                </ul>
+
+                <h3>2. Software You Need on Your Computer</h3>
+                <ul class="checklist">
+                    <li><strong>Node.js</strong> (version 18 or higher) - <a href="https://nodejs.org/" target="_blank">nodejs.org</a>
+                        <br>This runs JavaScript on your computer
+                    </li>
+                    <li><strong>Git</strong> - <a href="https://git-scm.com/" target="_blank">git-scm.com</a>
+                        <br>This helps manage your code
+                    </li>
+                    <li><strong>AWS CLI</strong> - <a href="https://aws.amazon.com/cli/" target="_blank">aws.amazon.com/cli</a>
+                        <br>This lets you control AWS from your computer
+                    </li>
+                    <li><strong>Text Editor</strong> - VS Code recommended: <a href="https://code.visualstudio.com/" target="_blank">code.visualstudio.com</a>
+                    </li>
+                </ul>
+
+                <h3>3. API Keys You'll Need</h3>
+                <table>
+                    <tr>
+                        <th>Service</th>
+                        <th>What It's For</th>
+                        <th>How to Get It</th>
+                    </tr>
+                    <tr>
+                        <td>Google Gemini API</td>
+                        <td>AI call analysis, symptom extraction</td>
+                        <td>Google Cloud Console → APIs & Services → Enable Gemini API</td>
+                    </tr>
+                    <tr>
+                        <td>Supabase URL & Key</td>
+                        <td>Database connection</td>
+                        <td>Supabase Dashboard → Project Settings → API</td>
+                    </tr>
+                </table>
+
+                <div class="warning">
+                    <strong>⚠️ Important:</strong> Never share your API keys publicly! They're like passwords to your services.
+                </div>
+            </div>
+
+            <!-- Section 3: Architecture -->
+            <div class="section" id="architecture">
+                <h2><span class="emoji">🏗️</span> How Everything Works Together</h2>
+                
+                <div class="step">
+                    <h3>The Flow of Data:</h3>
+                    <ol>
+                        <li><strong>User opens website</strong> → CloudFront serves the React app from S3</li>
+                        <li><strong>User creates emergency trip</strong> → Frontend saves to Supabase database</li>
+                        <li><strong>User generates medical report</strong> → Frontend calls GRASP2026 API on EC2</li>
+                        <li><strong>GRASP2026 analyzes symptoms</strong> → Returns diagnosis to frontend</li>
+                        <li><strong>Frontend generates PDF</strong> → Saves to Supabase storage</li>
+                        <li><strong>Real-time updates</strong> → Supabase pushes changes to all connected users</li>
+                    </ol>
+                </div>
+
+                <div class="info">
+                    <strong>📊 Architecture Diagram:</strong>
+                    <pre style="background: white; padding: 20px; border-radius: 8px; overflow-x: auto;">
+┌─────────────┐
+│   User's    │
+│   Browser   │
+└──────┬──────┘
+       │
+       ↓
+┌─────────────────────────────────────────┐
+│  AWS CloudFront (CDN)                   │
+│  - Caches website globally              │
+│  - HTTPS encryption                     │
+└──────┬──────────────────────────────────┘
+       │
+       ↓
+┌─────────────────────────────────────────┐
+│  AWS S3 Bucket                          │
+│  - Stores React app files               │
+│  - index.html, JS, CSS, images          │
+└─────────────────────────────────────────┘
+
+       ↓ (API Calls)
+
+┌─────────────────────────────────────────┐
+│  AWS EC2 Instance                       │
+│  - GRASP2026 Flask API                  │
+│  - Medical diagnosis engine             │
+│  - Port 5000                            │
+└──────┬──────────────────────────────────┘
+       │
+       ↓
+┌─────────────────────────────────────────┐
+│  Supabase Cloud                         │
+│  - PostgreSQL database                  │
+│  - File storage (PDFs)                  │
+│  - Real-time subscriptions              │
+└─────────────────────────────────────────┘
+                    </pre>
+                </div>
+            </div>
+
+            <!-- Section 4: Supabase Setup -->
+            <div class="section" id="supabase">
+                <h2><span class="emoji">💾</span> Setting Up Supabase (Database)</h2>
+                
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <strong>Create Supabase Project</strong>
+                    <ol>
+                        <li>Go to <a href="https://supabase.com" target="_blank">supabase.com</a></li>
+                        <li>Click "Start your project" → Sign up with GitHub</li>
+                        <li>Click "New Project"</li>
+                        <li>Fill in:
+                            <ul>
+                                <li><strong>Name:</strong> mats-production</li>
+                                <li><strong>Database Password:</strong> Create a strong password (save it!)</li>
+                                <li><strong>Region:</strong> Choose closest to your users</li>
+                                <li><strong>Pricing Plan:</strong> Free (for now)</li>
+                            </ul>
+                        </li>
+                        <li>Click "Create new project" (takes 2-3 minutes)</li>
+                    </ol>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <strong>Get Your API Keys</strong>
+                    <ol>
+                        <li>In Supabase dashboard, click "Settings" (gear icon)</li>
+                        <li>Click "API" in the left sidebar</li>
+                        <li>Copy these values (you'll need them later):
+                            <div class="code-block">
+Project URL: https://xxxxx.supabase.co
+anon public key: eyJhbGc...
+                            </div>
+                        </li>
+                        <li>Save these in a safe place (like a password manager)</li>
+                    </ol>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>Create Database Tables</strong>
+                    <ol>
+                        <li>In Supabase dashboard, click "SQL Editor" in the left sidebar</li>
+                        <li>Click "New query"</li>
+                        <li>Copy the entire content from <code>MATS/supabase/schema.sql</code></li>
+                        <li>Paste it into the SQL editor</li>
+                        <li>Click "Run" (bottom right)</li>
+                        <li>You should see "Success. No rows returned"</li>
+                    </ol>
+                    
+                    <div class="success">
+                        <strong>✅ What This Does:</strong> Creates 4 tables:
+                        <ul>
+                            <li><code>ambulances</code> - Stores ambulance fleet data</li>
+                            <li><code>trips</code> - Stores emergency incidents</li>
+                            <li><code>gps_locations</code> - Stores GPS tracking history</li>
+                            <li><code>medical_reports</code> - Stores medical report metadata</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <strong>Create Storage Bucket for PDFs</strong>
+                    <ol>
+                        <li>Click "Storage" in the left sidebar</li>
+                        <li>Click "Create a new bucket"</li>
+                        <li>Fill in:
+                            <ul>
+                                <li><strong>Name:</strong> medical-reports</li>
+                                <li><strong>Public bucket:</strong> ✅ Check this (so PDFs can be downloaded)</li>
+                            </ul>
+                        </li>
+                        <li>Click "Create bucket"</li>
+                    </ol>
+                </div>
+
+                <div class="success">
+                    <strong>🎉 Supabase Setup Complete!</strong>
+                    <p>Your database is ready. Keep your API keys safe - you'll need them in the next steps.</p>
+                </div>
+            </div>
+
+            <!-- Section 5: GRASP2026 Backend -->
+            <div class="section" id="grasp">
+                <h2><span class="emoji">🤖</span> Deploying GRASP2026 Backend (Medical AI)</h2>
+                
+                <div class="info">
+                    <strong>📝 What We're Doing:</strong>
+                    <p>We're putting the Python medical diagnosis API on an AWS EC2 server (a virtual computer in the cloud).</p>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <strong>Create EC2 Instance</strong>
+                    <ol>
+                        <li>Log into AWS Console: <a href="https://console.aws.amazon.com" target="_blank">console.aws.amazon.com</a></li>
+                        <li>Search for "EC2" in the top search bar</li>
+                        <li>Click "Launch Instance" (big orange button)</li>
+                        <li>Fill in:
+                            <ul>
+                                <li><strong>Name:</strong> grasp2026-backend</li>
+                                <li><strong>Application and OS Images:</strong> Ubuntu Server 22.04 LTS (Free tier eligible)</li>
+                                <li><strong>Instance type:</strong> t2.medium (2 vCPU, 4GB RAM - needed for AI model)</li>
+                                <li><strong>Key pair:</strong> Click "Create new key pair"
+                                    <ul>
+                                        <li>Name: grasp2026-key</li>
+                                        <li>Type: RSA</li>
+                                        <li>Format: .pem (for Mac/Linux) or .ppk (for Windows)</li>
+                                        <li>Click "Create key pair" - it will download</li>
+                                        <li><strong>SAVE THIS FILE!</strong> You can't download it again</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Network settings:</strong> Click "Edit"
+                                    <ul>
+                                        <li>Auto-assign public IP: Enable</li>
+                                        <li>Firewall (security groups): Create new
+                                            <ul>
+                                                <li>Rule 1: SSH (port 22) - Source: My IP</li>
+                                                <li>Rule 2: Custom TCP (port 5000) - Source: Anywhere (0.0.0.0/0)</li>
+                                                <li>Rule 3: HTTPS (port 443) - Source: Anywhere (0.0.0.0/0)</li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li><strong>Storage:</strong> 20 GB gp3 (default is fine)</li>
+                            </ul>
+                        </li>
+                        <li>Click "Launch instance"</li>
+                        <li>Wait 2-3 minutes for it to start</li>
+                        <li>Click on the instance ID to see details</li>
+                        <li>Copy the <strong>Public IPv4 address</strong> (e.g., 54.123.45.67) - save this!</li>
+                    </ol>
+                </div>
+
+                <div class="warning">
+                    <strong>💰 Cost Alert:</strong> t2.medium costs about $0.0464/hour (~$34/month). 
+                    <br>Free tier only covers t2.micro. Consider starting with t2.micro for testing, then upgrade if needed.
+                </div>
+
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <strong>Connect to Your EC2 Instance</strong>
+                    
+                    <p><strong>For Mac/Linux:</strong></p>
+                    <div class="code-block">
+# Make key file secure
+chmod 400 grasp2026-key.pem
+
+# Connect to server (replace with your IP)
+ssh -i grasp2026-key.pem ubuntu@54.123.45.67
+                    </div>
+
+                    <p><strong>For Windows (using PuTTY):</strong></p>
+                    <ol>
+                        <li>Download PuTTY: <a href="https://www.putty.org/" target="_blank">putty.org</a></li>
+                        <li>Open PuTTY</li>
+                        <li>Host Name: ubuntu@54.123.45.67 (your IP)</li>
+                        <li>Connection → SSH → Auth → Browse → Select your .ppk file</li>
+                        <li>Click "Open"</li>
+                    </ol>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>Install Required Software on EC2</strong>
+                    
+                    <p>Once connected to your EC2 instance, run these commands one by one:</p>
+                    
+                    <div class="code-block">
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install Python 3.10 and pip
+sudo apt install python3.10 python3-pip python3-venv -y
+
+# Install Git
+sudo apt install git -y
+
+# Install Nginx (web server)
+sudo apt install nginx -y
+
+# Install system dependencies for PyTorch
+sudo apt install python3-dev build-essential -y
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <strong>Upload GRASP2026 Code to EC2</strong>
+                    
+                    <p><strong>Option A: Using Git (Recommended)</strong></p>
+                    <div class="code-block">
+# Clone your repository (if you have it on GitHub)
+git clone https://github.com/yourusername/GRASP2026.git
+cd GRASP2026/Medical-XAI/backend
+                    </div>
+
+                    <p><strong>Option B: Using SCP (Secure Copy)</strong></p>
+                    <p>On your local computer (not EC2), run:</p>
+                    <div class="code-block">
+# Navigate to your GRASP2026 folder
+cd /path/to/GRASP2026
+
+# Copy files to EC2 (replace with your IP)
+scp -i grasp2026-key.pem -r Medical-XAI/backend ubuntu@54.123.45.67:~/
+                    </div>
+                    
+                    <p>Then on EC2:</p>
+                    <div class="code-block">
+cd ~/backend
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">5</span>
+                    <strong>Install Python Dependencies</strong>
+                    
+                    <div class="code-block">
+# Create virtual environment
+python3 -m venv venv
+
+# Activate virtual environment
+source venv/bin/activate
+
+# Install dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# This will take 5-10 minutes (PyTorch is large)
+                    </div>
+                    
+                    <div class="info">
+                        <strong>☕ Take a break!</strong> Installing PyTorch and transformers takes time. Grab a coffee!
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">6</span>
+                    <strong>Test the API Locally</strong>
+                    
+                    <div class="code-block">
+# Start the Flask app
+python app.py
+                    </div>
+                    
+                    <p>You should see:</p>
+                    <div class="code-block">
+* Running on http://0.0.0.0:5000
+Medical XAI model initialized successfully
+                    </div>
+
+                    <p>Test it from your computer:</p>
+                    <div class="code-block">
+curl http://54.123.45.67:5000/health
+                    </div>
+                    
+                    <p>Should return:</p>
+                    <div class="code-block">
+{"status":"healthy","model_loaded":true}
+                    </div>
+                    
+                    <p>Press <code>Ctrl+C</code> to stop the server.</p>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">7</span>
+                    <strong>Set Up Gunicorn (Production Server)</strong>
+                    
+                    <div class="code-block">
+# Install Gunicorn
+pip install gunicorn
+
+# Test Gunicorn
+gunicorn --bind 0.0.0.0:5000 --workers 2 --timeout 120 app:app
+                    </div>
+                    
+                    <p>If it works, press <code>Ctrl+C</code> and continue.</p>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">8</span>
+                    <strong>Create Systemd Service (Auto-Start on Boot)</strong>
+                    
+                    <div class="code-block">
+# Create service file
+sudo nano /etc/systemd/system/grasp2026.service
+                    </div>
+                    
+                    <p>Paste this content (replace <code>/home/ubuntu/backend</code> if your path is different):</p>
+                    <div class="code-block">
+[Unit]
+Description=GRASP2026 Medical Diagnosis API
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/backend
+Environment="PATH=/home/ubuntu/backend/venv/bin"
+ExecStart=/home/ubuntu/backend/venv/bin/gunicorn --bind 0.0.0.0:5000 --workers 2 --timeout 120 app:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+                    </div>
+
+                    <p>Save and exit: <code>Ctrl+X</code>, then <code>Y</code>, then <code>Enter</code></p>
+                    
+                    <div class="code-block">
+# Enable and start service
+sudo systemctl daemon-reload
+sudo systemctl enable grasp2026
+sudo systemctl start grasp2026
+
+# Check status
+sudo systemctl status grasp2026
+                    </div>
+                    
+                    <p>You should see "active (running)" in green.</p>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">9</span>
+                    <strong>Configure Nginx (Reverse Proxy)</strong>
+                    
+                    <div class="code-block">
+# Create Nginx config
+sudo nano /etc/nginx/sites-available/grasp2026
+                    </div>
+                    
+                    <p>Paste this content:</p>
+                    <div class="code-block">
+server {
+    listen 80;
+    server_name 54.123.45.67;  # Replace with your EC2 IP
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_connect_timeout 120s;
+        proxy_send_timeout 120s;
+        proxy_read_timeout 120s;
+    }
+}
+                    </div>
+                    
+                    <p>Save and exit, then:</p>
+                    <div class="code-block">
+# Enable site
+sudo ln -s /etc/nginx/sites-available/grasp2026 /etc/nginx/sites-enabled/
+
+# Test config
+sudo nginx -t
+
+# Restart Nginx
+sudo systemctl restart nginx
+                    </div>
+                </div>
+
+                <div class="success">
+                    <strong>🎉 GRASP2026 Backend is Live!</strong>
+                    <p>Test it from your browser: <code>http://54.123.45.67/health</code></p>
+                    <p>Save this URL - you'll need it for the frontend: <code>http://54.123.45.67</code></p>
+                </div>
+
+                <div class="info">
+                    <strong>📝 Useful Commands:</strong>
+                    <div class="code-block">
+# View logs
+sudo journalctl -u grasp2026 -f
+
+# Restart service
+sudo systemctl restart grasp2026
+
+# Stop service
+sudo systemctl stop grasp2026
+
+# Check if service is running
+sudo systemctl status grasp2026
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 6: Frontend Deployment -->
+            <div class="section" id="frontend">
+                <h2><span class="emoji">🌐</span> Deploying MATS Frontend (Website)</h2>
+                
+                <div class="info">
+                    <strong>📝 What We're Doing:</strong>
+                    <p>We're building the React app into static files and uploading them to AWS S3, then serving them through CloudFront CDN.</p>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <strong>Configure Environment Variables</strong>
+                    
+                    <p>On your local computer, navigate to the MATS folder and create/edit <code>.env</code> file:</p>
+                    <div class="code-block">
+cd MATS
+nano .env
+                    </div>
+
+                    <p>Add these values (replace with your actual keys):</p>
+                    <div class="code-block">
+# Google Gemini API Key
+VITE_API_KEY=your_gemini_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Supabase Configuration
+VITE_SUPABASE_URL=https://xxxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
+# GRASP2026 Backend URL (your EC2 IP)
+VITE_GRASP2026_API_URL=http://54.123.45.67
+                    </div>
+                    
+                    <div class="warning">
+                        <strong>⚠️ Important:</strong> 
+                        <ul>
+                            <li>All variables must start with <code>VITE_</code> to be included in the build</li>
+                            <li>Never commit this file to Git (it's in .gitignore)</li>
+                            <li>These values will be embedded in your JavaScript (visible to users)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <strong>Build the React App</strong>
+                    
+                    <div class="code-block">
+# Install dependencies (if not already done)
+npm install
+
+# Build for production
+npm run build
+                    </div>
+                    
+                    <p>This creates a <code>dist/</code> folder with all your website files.</p>
+                    
+                    <div class="success">
+                        <strong>✅ Build Complete!</strong> You should see:
+                        <ul>
+                            <li><code>dist/index.html</code></li>
+                            <li><code>dist/assets/</code> (JS and CSS files)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>Create S3 Bucket</strong>
+                    
+                    <ol>
+                        <li>Go to AWS Console → Search for "S3"</li>
+                        <li>Click "Create bucket"</li>
+                        <li>Fill in:
+                            <ul>
+                                <li><strong>Bucket name:</strong> mats-frontend-prod (must be globally unique)</li>
+                                <li><strong>Region:</strong> Choose closest to your users (e.g., us-east-1)</li>
+                                <li><strong>Block Public Access:</strong> ❌ UNCHECK "Block all public access"</li>
+                                <li>Check the warning acknowledgment box</li>
+                            </ul>
+                        </li>
+                        <li>Leave everything else as default</li>
+                        <li>Click "Create bucket"</li>
+                    </ol>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <strong>Enable Static Website Hosting</strong>
+                    
+                    <ol>
+                        <li>Click on your bucket name</li>
+                        <li>Go to "Properties" tab</li>
+                        <li>Scroll down to "Static website hosting"</li>
+                        <li>Click "Edit"</li>
+                        <li>Select "Enable"</li>
+                        <li>Fill in:
+                            <ul>
+                                <li><strong>Index document:</strong> index.html</li>
+                                <li><strong>Error document:</strong> index.html (for React Router)</li>
+                            </ul>
+                        </li>
+                        <li>Click "Save changes"</li>
+                        <li>Copy the "Bucket website endpoint" URL (e.g., http://mats-frontend-prod.s3-website-us-east-1.amazonaws.com)</li>
+                    </ol>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">5</span>
+                    <strong>Set Bucket Policy (Make Files Public)</strong>
+                    
+                    <ol>
+                        <li>Go to "Permissions" tab</li>
+                        <li>Scroll to "Bucket policy"</li>
+                        <li>Click "Edit"</li>
+                        <li>Paste this policy (replace <code>mats-frontend-prod</code> with your bucket name):</li>
+                    </ol>
+                    
+                    <div class="code-block">
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "PublicReadGetObject",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::mats-frontend-prod/*"
+        }
+    ]
+}
+                    </div>
+                    
+                    <ol start="5">
+                        <li>Click "Save changes"</li>
+                    </ol>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">6</span>
+                    <strong>Upload Files to S3</strong>
+                    
+                    <p><strong>Option A: Using AWS Console (Easy)</strong></p>
+                    <ol>
+                        <li>Go to "Objects" tab</li>
+                        <li>Click "Upload"</li>
+                        <li>Click "Add files" and "Add folder"</li>
+                        <li>Select ALL files from your <code>dist/</code> folder</li>
+                        <li>Click "Upload"</li>
+                        <li>Wait for upload to complete</li>
+                    </ol>
+
+                    <p><strong>Option B: Using AWS CLI (Faster for updates)</strong></p>
+                    <div class="code-block">
+# Configure AWS CLI (first time only)
+aws configure
+# Enter your AWS Access Key ID
+# Enter your AWS Secret Access Key
+# Enter region (e.g., us-east-1)
+# Enter output format: json
+
+# Upload files
+cd MATS
+aws s3 sync dist/ s3://mats-frontend-prod/ --delete
+                    </div>
+                    
+                    <div class="info">
+                        <strong>💡 Pro Tip:</strong> Use <code>aws s3 sync</code> for future updates. It only uploads changed files!
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">7</span>
+                    <strong>Test Your Website</strong>
+                    
+                    <p>Open the S3 website endpoint URL in your browser:</p>
+                    <div class="code-block">
+http://mats-frontend-prod.s3-website-us-east-1.amazonaws.com
+                    </div>
+                    
+                    <p>You should see your MATS application!</p>
+                    
+                    <div class="warning">
+                        <strong>⚠️ Note:</strong> This URL is not HTTPS and not user-friendly. We'll fix this with CloudFront next!
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">8</span>
+                    <strong>Create CloudFront Distribution (CDN)</strong>
+                    
+                    <ol>
+                        <li>Go to AWS Console → Search for "CloudFront"</li>
+                        <li>Click "Create distribution"</li>
+                        <li>Fill in:
+                            <ul>
+                                <li><strong>Origin domain:</strong> Select your S3 bucket from dropdown</li>
+                                <li><strong>Origin access:</strong> Public</li>
+                                <li><strong>Viewer protocol policy:</strong> Redirect HTTP to HTTPS</li>
+                                <li><strong>Allowed HTTP methods:</strong> GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE</li>
+                                <li><strong>Cache policy:</strong> CachingOptimized</li>
+                                <li><strong>Price class:</strong> Use all edge locations (best performance)</li>
+                                <li><strong>Alternate domain name (CNAME):</strong> Leave empty for now (we'll add later)</li>
+                                <li><strong>Default root object:</strong> index.html</li>
+                            </ul>
+                        </li>
+                        <li>Click "Create distribution"</li>
+                        <li>Wait 5-10 minutes for deployment (status will change from "Deploying" to "Enabled")</li>
+                        <li>Copy the "Distribution domain name" (e.g., d1234abcd.cloudfront.net)</li>
+                    </ol>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">9</span>
+                    <strong>Configure Error Pages (for React Router)</strong>
+                    
+                    <ol>
+                        <li>Click on your distribution ID</li>
+                        <li>Go to "Error pages" tab</li>
+                        <li>Click "Create custom error response"</li>
+                        <li>Fill in:
+                            <ul>
+                                <li><strong>HTTP error code:</strong> 403: Forbidden</li>
+                                <li><strong>Customize error response:</strong> Yes</li>
+                                <li><strong>Response page path:</strong> /index.html</li>
+                                <li><strong>HTTP response code:</strong> 200: OK</li>
+                            </ul>
+                        </li>
+                        <li>Click "Create custom error response"</li>
+                        <li>Repeat for error code 404: Not Found</li>
+                    </ol>
+                </div>
+
+                <div class="success">
+                    <strong>🎉 Your Website is Live!</strong>
+                    <p>Visit: <code>https://d1234abcd.cloudfront.net</code></p>
+                    <p>✅ HTTPS enabled</p>
+                    <p>✅ Global CDN (fast worldwide)</p>
+                    <p>✅ React Router working</p>
+                </div>
+
+                <div class="info">
+                    <strong>🔄 How to Update Your Website:</strong>
+                    <div class="code-block">
+# 1. Make changes to your code
+# 2. Rebuild
+npm run build
+
+# 3. Upload to S3
+aws s3 sync dist/ s3://mats-frontend-prod/ --delete
+
+# 4. Invalidate CloudFront cache (replace with your distribution ID)
+aws cloudfront create-invalidation --distribution-id E1234ABCD --paths "/*"
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 7: Domain Setup -->
+            <div class="section" id="domain">
+                <h2><span class="emoji">🌍</span> Setting Up Your Domain Name (Optional)</h2>
+                
+                <div class="info">
+                    <strong>📝 What We're Doing:</strong>
+                    <p>Instead of <code>d1234abcd.cloudfront.net</code>, you can use your own domain like <code>mats.yourdomain.com</code></p>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <strong>Buy a Domain (if you don't have one)</strong>
+                    
+                    <p>You can buy from:</p>
+                    <ul>
+                        <li><strong>AWS Route 53:</strong> $12/year for .com</li>
+                        <li><strong>Namecheap:</strong> ~$10/year</li>
+                        <li><strong>GoDaddy:</strong> ~$15/year</li>
+                        <li><strong>Google Domains:</strong> $12/year</li>
+                    </ul>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <strong>Request SSL Certificate (Free!)</strong>
+                    
+                    <ol>
+                        <li>Go to AWS Console → Search for "Certificate Manager"</li>
+                        <li><strong>IMPORTANT:</strong> Switch region to <strong>us-east-1</strong> (N. Virginia) - CloudFront only works with certificates in this region!</li>
+                        <li>Click "Request certificate"</li>
+                        <li>Select "Request a public certificate"</li>
+                        <li>Fill in:
+                            <ul>
+                                <li><strong>Domain names:</strong> 
+                                    <ul>
+                                        <li>mats.yourdomain.com</li>
+                                        <li>*.yourdomain.com (wildcard, optional)</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Validation method:</strong> DNS validation</li>
+                            </ul>
+                        </li>
+                        <li>Click "Request"</li>
+                        <li>Click on the certificate ID</li>
+                        <li>You'll see CNAME records to add to your DNS</li>
+                        <li>Add these CNAME records to your domain's DNS settings</li>
+                        <li>Wait 5-30 minutes for validation (status will change to "Issued")</li>
+                    </ol>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>Add Domain to CloudFront</strong>
+                    
+                    <ol>
+                        <li>Go back to CloudFront</li>
+                        <li>Click on your distribution</li>
+                        <li>Click "Edit"</li>
+                        <li>Fill in:
+                            <ul>
+                                <li><strong>Alternate domain names (CNAMEs):</strong> mats.yourdomain.com</li>
+                                <li><strong>Custom SSL certificate:</strong> Select your certificate from dropdown</li>
+                            </ul>
+                        </li>
+                        <li>Click "Save changes"</li>
+                    </ol>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <strong>Point Domain to CloudFront</strong>
+                    
+                    <p>In your domain's DNS settings, add:</p>
+                    <table>
+                        <tr>
+                            <th>Type</th>
+                            <th>Name</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr>
+                            <td>CNAME</td>
+                            <td>mats</td>
+                            <td>d1234abcd.cloudfront.net</td>
+                        </tr>
+                    </table>
+                    
+                    <p>Wait 5-60 minutes for DNS propagation.</p>
+                </div>
+
+                <div class="success">
+                    <strong>🎉 Your Custom Domain is Live!</strong>
+                    <p>Visit: <code>https://mats.yourdomain.com</code></p>
+                </div>
+            </div>
+
+            <!-- Section 8: Testing -->
+            <div class="section" id="testing">
+                <h2><span class="emoji">🧪</span> Testing Everything</h2>
+                
+                <div class="step">
+                    <h3>Frontend Tests</h3>
+                    <ul class="checklist">
+                        <li>Open your website URL</li>
+                        <li>Check if login page loads</li>
+                        <li>Try logging in as admin</li>
+                        <li>Check if ambulances appear on map</li>
+                        <li>Try creating a new trip</li>
+                        <li>Check if real-time updates work (open in 2 tabs)</li>
+                    </ul>
+                </div>
+
+                <div class="step">
+                    <h3>Backend API Tests</h3>
+                    <div class="code-block">
+# Test health endpoint
+curl http://your-ec2-ip/health
+
+# Test diagnosis endpoint
+curl -X POST http://your-ec2-ip/diagnose \
+  -H "Content-Type: application/json" \
+  -d '{"symptoms": "fever, cough, headache", "days": 2}'
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h3>Database Tests</h3>
+                    <ol>
+                        <li>Go to Supabase dashboard</li>
+                        <li>Click "Table Editor"</li>
+                        <li>Check if tables exist: ambulances, trips, gps_locations, medical_reports</li>
+                        <li>Try creating a trip in your app</li>
+                        <li>Refresh Supabase - you should see the new record</li>
+                    </ol>
+                </div>
+
+                <div class="step">
+                    <h3>Medical Report Tests</h3>
+                    <ol>
+                        <li>Create a trip with incident description: "Patient has fever and cough"</li>
+                        <li>Click "Generate Medical Report"</li>
+                        <li>Wait for PDF to generate</li>
+                        <li>Download and open PDF</li>
+                        <li>Check if diagnosis appears with colored tables</li>
+                    </ol>
+                </div>
+
+                <div class="success">
+                    <strong>✅ All Tests Passed?</strong>
+                    <p>Congratulations! Your MATS system is fully operational! 🎉</p>
+                </div>
+            </div>
+
+            <!-- Section 9: Monitoring -->
+            <div class="section" id="monitoring">
+                <h2><span class="emoji">📊</span> Monitoring & Maintenance</h2>
+                
+                <div class="step">
+                    <h3>Monitor EC2 Instance</h3>
+                    <ol>
+                        <li>Go to EC2 Dashboard</li>
+                        <li>Click on your instance</li>
+                        <li>Go to "Monitoring" tab</li>
+                        <li>Check:
+                            <ul>
+                                <li>CPU utilization (should be &lt;80%)</li>
+                                <li>Network in/out</li>
+                                <li>Disk usage</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="step">
+                    <h3>View Backend Logs</h3>
+                    <div class="code-block">
+# SSH into EC2
+ssh -i grasp2026-key.pem ubuntu@your-ec2-ip
+
+# View live logs
+sudo journalctl -u grasp2026 -f
+
+# View last 100 lines
+sudo journalctl -u grasp2026 -n 100
+
+# View errors only
+sudo journalctl -u grasp2026 -p err
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h3>Monitor Supabase Usage</h3>
+                    <ol>
+                        <li>Go to Supabase Dashboard</li>
+                        <li>Click "Settings" → "Usage"</li>
+                        <li>Check:
+                            <ul>
+                                <li>Database size (500MB free tier limit)</li>
+                                <li>Storage size (1GB free tier limit)</li>
+                                <li>Bandwidth usage</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="step">
+                    <h3>Set Up CloudWatch Alarms (Optional)</h3>
+                    <ol>
+                        <li>Go to CloudWatch in AWS Console</li>
+                        <li>Click "Alarms" → "Create alarm"</li>
+                        <li>Select metric: EC2 → Per-Instance Metrics → CPUUtilization</li>
+                        <li>Set threshold: &gt; 80% for 5 minutes</li>
+                        <li>Add email notification</li>
+                        <li>Create alarm</li>
+                    </ol>
+                </div>
+
+                <div class="info">
+                    <strong>🔄 Regular Maintenance Tasks:</strong>
+                    <ul>
+                        <li><strong>Weekly:</strong> Check logs for errors</li>
+                        <li><strong>Monthly:</strong> Review AWS costs, update dependencies</li>
+                        <li><strong>Quarterly:</strong> Backup database, review security</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section 10: Costs -->
+            <div class="section" id="costs">
+                <h2><span class="emoji">💰</span> Cost Breakdown</h2>
+                
+                <h3>Monthly Cost Estimate</h3>
+                <table>
+                    <tr>
+                        <th>Service</th>
+                        <th>Free Tier</th>
+                        <th>After Free Tier</th>
+                        <th>Notes</th>
+                    </tr>
+                    <tr>
+                        <td><strong>EC2 t2.medium</strong></td>
+                        <td>$0 (first 750 hours t2.micro only)</td>
+                        <td>~$34/month</td>
+                        <td>Can use t2.micro ($8/month) for testing</td>
+                    </tr>
+                    <tr>
+                        <td><strong>S3 Storage</strong></td>
+                        <td>5GB free</td>
+                        <td>$0.023/GB</td>
+                        <td>~$0.50/month for typical usage</td>
+                    </tr>
+                    <tr>
+                        <td><strong>CloudFront</strong></td>
+                        <td>50GB free/month</td>
+                        <td>$0.085/GB</td>
+                        <td>~$5/month for 100GB</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Supabase</strong></td>
+                        <td>Free forever (500MB DB, 1GB storage)</td>
+                        <td>$25/month (Pro plan)</td>
+                        <td>Free tier sufficient for MVP</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Route 53</strong></td>
+                        <td>$0.50/month per hosted zone</td>
+                        <td>$0.50/month</td>
+                        <td>Only if using custom domain</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Domain Name</strong></td>
+                        <td>N/A</td>
+                        <td>$12/year</td>
+                        <td>Optional</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SSL Certificate</strong></td>
+                        <td>FREE (AWS Certificate Manager)</td>
+                        <td>FREE</td>
+                        <td>Always free!</td>
+                    </tr>
+                    <tr style="background: #e6f2ff; font-weight: bold;">
+                        <td><strong>TOTAL</strong></td>
+                        <td><strong>~$0-5/month</strong></td>
+                        <td><strong>~$40-50/month</strong></td>
+                        <td>Production estimate</td>
+                    </tr>
+                </table>
+
+                <div class="info">
+                    <strong>💡 Cost Optimization Tips:</strong>
+                    <ul>
+                        <li><strong>Start with t2.micro</strong> for EC2 (free tier, $8/month after)</li>
+                        <li><strong>Use Reserved Instances</strong> for EC2 (save up to 72%)</li>
+                        <li><strong>Enable S3 Intelligent-Tiering</strong> for automatic cost optimization</li>
+                        <li><strong>Set up billing alerts</strong> in AWS to avoid surprises</li>
+                        <li><strong>Delete old GPS location data</strong> to save database space</li>
+                    </ul>
+                </div>
+
+                <div class="warning">
+                    <strong>⚠️ Set Up Billing Alerts!</strong>
+                    <ol>
+                        <li>Go to AWS Console → Billing Dashboard</li>
+                        <li>Click "Budgets" → "Create budget"</li>
+                        <li>Select "Cost budget"</li>
+                        <li>Set amount: $50/month</li>
+                        <li>Add email notification at 80% threshold</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Section 11: Troubleshooting -->
+            <div class="section" id="troubleshooting">
+                <h2><span class="emoji">🔧</span> Common Problems & Solutions</h2>
+                
+                <div class="step">
+                    <h3>Problem: Website shows "Access Denied"</h3>
+                    <p><strong>Solution:</strong></p>
+                    <ul>
+                        <li>Check S3 bucket policy is set correctly</li>
+                        <li>Verify "Block Public Access" is OFF</li>
+                        <li>Make sure all files are uploaded to S3</li>
+                    </ul>
+                </div>
+
+                <div class="step">
+                    <h3>Problem: Medical reports not generating</h3>
+                    <p><strong>Solution:</strong></p>
+                    <ul>
+                        <li>Check GRASP2026 backend is running: <code>sudo systemctl status grasp2026</code></li>
+                        <li>Verify VITE_GRASP2026_API_URL in .env is correct</li>
+                        <li>Check EC2 security group allows port 5000</li>
+                        <li>Test API directly: <code>curl http://your-ec2-ip/health</code></li>
+                    </ul>
+                </div>
+
+                <div class="step">
+                    <h3>Problem: Real-time updates not working</h3>
+                    <p><strong>Solution:</strong></p>
+                    <ul>
+                        <li>Check Supabase URL and keys in .env</li>
+                        <li>Verify Supabase project is active</li>
+                        <li>Check browser console for errors (F12)</li>
+                        <li>Rebuild and redeploy: <code>npm run build && aws s3 sync dist/ s3://your-bucket/</code></li>
+                    </ul>
+                </div>
+
+                <div class="step">
+                    <h3>Problem: EC2 instance not responding</h3>
+                    <p><strong>Solution:</strong></p>
+                    <ul>
+                        <li>Check instance is running in EC2 console</li>
+                        <li>Verify security group allows your IP for SSH</li>
+                        <li>Try rebooting: EC2 Console → Actions → Instance State → Reboot</li>
+                        <li>Check system logs: EC2 Console → Actions → Monitor and troubleshoot → Get system log</li>
+                    </ul>
+                </div>
+
+                <div class="step">
+                    <h3>Problem: CloudFront showing old content</h3>
+                    <p><strong>Solution:</strong></p>
+                    <div class="code-block">
+# Invalidate CloudFront cache
+aws cloudfront create-invalidation \
+  --distribution-id YOUR_DISTRIBUTION_ID \
+  --paths "/*"
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h3>Problem: "Out of memory" errors on EC2</h3>
+                    <p><strong>Solution:</strong></p>
+                    <ul>
+                        <li>Upgrade to larger instance (t2.medium → t2.large)</li>
+                        <li>Add swap space:
+                            <div class="code-block">
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+                            </div>
+                        </li>
+                        <li>Reduce Gunicorn workers in systemd service file</li>
+                    </ul>
+                </div>
+
+                <div class="step">
+                    <h3>Problem: SSL certificate not validating</h3>
+                    <p><strong>Solution:</strong></p>
+                    <ul>
+                        <li>Make sure you added CNAME records to your domain's DNS</li>
+                        <li>Wait 30 minutes for DNS propagation</li>
+                        <li>Check DNS records: <code>nslookup your-domain.com</code></li>
+                        <li>Certificate MUST be in us-east-1 region for CloudFront</li>
+                    </ul>
+                </div>
+
+                <div class="info">
+                    <strong>🆘 Need More Help?</strong>
+                    <ul>
+                        <li><strong>AWS Support:</strong> <a href="https://console.aws.amazon.com/support/" target="_blank">console.aws.amazon.com/support</a></li>
+                        <li><strong>Supabase Docs:</strong> <a href="https://supabase.com/docs" target="_blank">supabase.com/docs</a></li>
+                        <li><strong>Stack Overflow:</strong> Search for specific error messages</li>
+                        <li><strong>AWS Forums:</strong> <a href="https://forums.aws.amazon.com/" target="_blank">forums.aws.amazon.com</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Final Section: Quick Reference -->
+            <div class="section">
+                <h2><span class="emoji">📚</span> Quick Reference</h2>
+                
+                <h3>Important URLs</h3>
+                <table>
+                    <tr>
+                        <th>Service</th>
+                        <th>URL</th>
+                    </tr>
+                    <tr>
+                        <td>AWS Console</td>
+                        <td><a href="https://console.aws.amazon.com" target="_blank">console.aws.amazon.com</a></td>
+                    </tr>
+                    <tr>
+                        <td>Supabase Dashboard</td>
+                        <td><a href="https://app.supabase.com" target="_blank">app.supabase.com</a></td>
+                    </tr>
+                    <tr>
+                        <td>Google Cloud Console</td>
+                        <td><a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a></td>
+                    </tr>
+                </table>
+
+                <h3>Useful Commands Cheat Sheet</h3>
+                <div class="code-block">
+# SSH into EC2
+ssh -i grasp2026-key.pem ubuntu@YOUR_EC2_IP
+
+# Check backend status
+sudo systemctl status grasp2026
+
+# Restart backend
+sudo systemctl restart grasp2026
+
+# View logs
+sudo journalctl -u grasp2026 -f
+
+# Build frontend
+cd MATS && npm run build
+
+# Deploy frontend
+aws s3 sync dist/ s3://YOUR_BUCKET_NAME/ --delete
+
+# Invalidate CloudFront
+aws cloudfront create-invalidation --distribution-id YOUR_DIST_ID --paths "/*"
+
+# Check disk space on EC2
+df -h
+
+# Check memory usage on EC2
+free -h
+
+# Update backend code
+cd ~/backend
+git pull
+sudo systemctl restart grasp2026
+                </div>
+
+                <h3>Environment Variables Template</h3>
+                <div class="code-block">
+# Copy this to MATS/.env
+
+# Google Gemini API
+VITE_API_KEY=your_gemini_api_key
+GEMINI_API_KEY=your_gemini_api_key
+
+# Supabase
+VITE_SUPABASE_URL=https://xxxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# GRASP2026 Backend
+VITE_GRASP2026_API_URL=http://YOUR_EC2_IP
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <div class="section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; padding: 50px;">
+                <h2 style="color: white; font-size: 2.5em; margin-bottom: 20px;">🎉 Congratulations!</h2>
+                <p style="font-size: 1.3em; margin-bottom: 30px;">You've successfully deployed MATS to AWS!</p>
+                <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
+                    <h3 style="color: white; margin-bottom: 15px;">Your System is Now:</h3>
+                    <ul style="list-style: none; font-size: 1.2em; line-height: 2;">
+                        <li>✅ Globally accessible via HTTPS</li>
+                        <li>✅ Backed by a scalable database</li>
+                        <li>✅ Powered by AI medical diagnosis</li>
+                        <li>✅ Real-time GPS tracking enabled</li>
+                        <li>✅ Generating professional medical reports</li>
+                        <li>✅ Monitored and maintainable</li>
+                    </ul>
+                </div>
+                
+                <p style="font-size: 1.1em; margin-top: 30px;">
+                    Remember to bookmark this guide for future reference!
+                </p>
+                
+                <div style="margin-top: 30px;">
+                    <a href="#" onclick="window.print(); return false;" class="button" style="background: white; color: #667eea;">
+                        🖨️ Print This Guide
+                    </a>
+                    <a href="#overview" class="button" style="background: rgba(255,255,255,0.2);">
+                        ⬆️ Back to Top
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
