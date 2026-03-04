@@ -9,8 +9,11 @@ export enum AmbulanceStatus {
 export enum TripStatus {
   REQUESTED = 'requested',
   ASSIGNED = 'assigned',
-  ENROUTE = 'enroute',
-  ARRIVED = 'arrived',
+  ENROUTE_TO_PICKUP = 'enroute_to_pickup',
+  ARRIVED_AT_PICKUP = 'arrived_at_pickup',
+  PICKED_UP = 'picked_up',
+  ENROUTE_TO_HOSPITAL = 'enroute_to_hospital',
+  ARRIVED_AT_HOSPITAL = 'arrived_at_hospital',
   COMPLETED = 'completed'
 }
 
@@ -56,6 +59,8 @@ export interface Trip {
   hospital_location: Location;
   status: TripStatus;
   start_time: string;
+  pickup_time?: string;
+  arrival_time?: string;
   end_time?: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
 }

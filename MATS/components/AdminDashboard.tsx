@@ -640,38 +640,69 @@ const AdminDashboard: React.FC = () => {
                 <th className="pb-2 font-medium">Ambulance</th>
                 <th className="pb-2 font-medium">Hospital</th>
                 <th className="pb-2 font-medium">Status</th>
-                <th className="pb-2 font-medium">Time</th>
+                <th className="pb-2 font-medium">Started</th>
+                <th className="pb-2 font-medium">Picked Up</th>
+                <th className="pb-2 font-medium">Arrived Hosp.</th>
+                <th className="pb-2 font-medium">Duration</th>
                 <th className="pb-2 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {trips.map(trip => (
-                <tr key={trip.id} className="border-b hover:bg-slate-50">
-                  <td className="py-2 font-mono">{trip.id}</td>
-                  <td className="py-2">{trip.patient_name}</td>
-                  <td className="py-2">{trip.ambulance_id || 'N/A'}</td>
-                  <td className="py-2">{trip.hospital_name}</td>
-                  <td className="py-2">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] ${
-                      trip.status === TripStatus.COMPLETED ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
-                    }`}>
-                      {trip.status}
-                    </span>
-                  </td>
-                  <td className="py-2 text-slate-500">{new Date(trip.start_time).toLocaleTimeString()}</td>
-                  <td className="py-2">
-                    {trip.status !== TripStatus.COMPLETED && (
-                      <button
-                        onClick={() => handleMarkComplete(trip.id)}
-                        className="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1 rounded text-[10px] font-bold transition-all"
-                        title="Mark trip as complete"
-                      >
-                        ✓ Complete
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {trips.map(trip => {
+                const calculateDuration = () => {
+                  if (!trip.start_time) return '-';
+                  const start = new Date(trip.start_time).getTime();
+                  const end = trip.end_time ? new Date(trip.end_time).getTime() : Date.now();
+                  const diff = Math.floor((end - start) / 1000 / 60); // minutes
+                  return `${diff}m`;
+                };
+
+                return (
+                  <tr key={trip.id} className="border-b hover:bg-slate-50">
+                    <td className="py-2 font-mono">{trip.id}</td>
+                    <td className="py-2">{trip.patient_name}</td>
+                    <td className="py-2">{trip.ambulance_id || 'N/A'}</td>
+                    <td className="py-2">{trip.hospital_name}</td>
+                    <td className="py-2">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] ${
+                        trip.status === TripStatus.COMPLETED ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {trip.status}
+                      </span>
+                    </td>
+                    <td className="py-2 text-slate-500">{new Date(trip.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                    <td className="py-2 text-slate-500">{trip.pickup_time ? new Date(trip.pickup_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                    <td className="py-2 text-slate-500">{trip.arrival_time ? new Date(trip.arrival_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                    <td className="py-2 font-bold text-blue-600">{calculateDuration()}</td>
+                    <td className="py-2">
+                      <div className="flex gap-2">
+                        {trip.status !== TripStatus.COMPLETED && (
+                          <button
+                            onClick={() => handleMarkComplete(trip.id)}
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1 rounded text-[10px] font-bold transition-all"
+                            title="Mark trip as complete"
+                          >
+                            ✓ Complete
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleGenerateReport(trip)}
+                          disabled={generatingReportFor === trip.id}
+                          className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-[10px] font-bold transition-all flex items-center gap-1"
+                          title="Generate/Update Medical Report"
+                        >
+                          {generatingReportFor === trip.id ? (
+                            <i className="fa-solid fa-spinner animate-spin"></i>
+                          ) : (
+                            <i className="fa-solid fa-file-medical"></i>
+                          )}
+                          Report
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

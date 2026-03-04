@@ -178,20 +178,54 @@ class SupabaseBackend {
 
   async updateTripStatus(tripId: string, status: TripStatus) {
     await this.initPromise;
-    const end_time = status === TripStatus.COMPLETED ? new Date().toISOString() : null;
-    await supabase.from('trips').update({ status, end_time }).eq('id', tripId);
-
+    const now = new Date().toISOString();
+    
+    // FIND THE TRIP FIRST so we can use its current data
     const affectedTrip = this.trips.find(t => t.id === tripId);
-    if (!affectedTrip?.ambulance_id) return;
+    
+    // IMPORTANT: Only update columns that actually exist in the DB to avoid error
+    // If you haven't run the SQL in Supabase dashboard, these updates might fail.
+    let updates: any = { status };
+    
+    // Logic to handle multiple timestamp captures based on button click
+    if (status === TripStatus.COMPLETED) {
+      updates.end_time = now;
+      // If we jumped straight from Arrived -> Completed, fill in intermediate steps
+      if (!affectedTrip?.pickup_time) updates.pickup_time = now;
+      if (!affectedTrip?.arrival_time) updates.arrival_time = now;
+    } else if (status === TripStatus.PICKED_UP) {
+      updates.pickup_time = now;
+    } else if (status === TripStatus.ARRIVED_AT_HOSPITAL) {
+      updates.arrival_time = now;
+    }
+    
+    console.log('UPDATING TRIP:', tripId, 'WITH:', updates);
+    
+    // 1. Update Trip
+    const { error: tripError } = await supabase.from('trips').update(updates).eq('id', tripId);
+    if (tripError) {
+      console.error('SUPABASE TRIP UPDATE ERROR:', tripError);
+      throw new Error(tripError.message);
+    }
 
-    let ambStatus = AmbulanceStatus.ENROUTE;
-    if (status === TripStatus.ARRIVED) ambStatus = AmbulanceStatus.HOSPITAL;
-    if (status === TripStatus.COMPLETED) ambStatus = AmbulanceStatus.AVAILABLE;
+    // 2. Update Ambulance Status if assigned
+    if (affectedTrip?.ambulance_id) {
+      let ambStatus = AmbulanceStatus.ENROUTE;
+      if (status === TripStatus.ARRIVED_AT_HOSPITAL) ambStatus = AmbulanceStatus.HOSPITAL;
+      if (status === TripStatus.COMPLETED) ambStatus = AmbulanceStatus.AVAILABLE;
 
-    await supabase
-      .from('ambulances')
-      .update({ status: ambStatus, last_updated: new Date().toISOString() })
-      .eq('id', affectedTrip.ambulance_id);
+      const { error: ambError } = await supabase
+        .from('ambulances')
+        .update({ status: ambStatus, last_updated: now })
+        .eq('id', affectedTrip.ambulance_id);
+      
+      if (ambError) {
+        console.error('SUPABASE AMBULANCE UPDATE ERROR:', ambError);
+        // We don't necessarily want to crash the whole flow if the ambulance record fails, 
+        // but it's good to log it.
+      }
+    }
+
     await this.refresh();
   }
 

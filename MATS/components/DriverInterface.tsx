@@ -9,6 +9,7 @@ const VendorPortal: React.FC = () => {
   const [currentAmbulanceId, setCurrentAmbulanceId] = useState<string>('AMB-001');
   const [ambulance, setAmbulance] = useState<Ambulance | null>(null);
   const [activeTrip, setActiveTrip] = useState<Trip | null>(null);
+  const [allTrips, setAllTrips] = useState<Trip[]>([]);
   const [gpsActive, setGpsActive] = useState<boolean>(false);
   const [batteryLevel, setBatteryLevel] = useState<number>(100);
   const [showMap, setShowMap] = useState<boolean>(false);
@@ -17,11 +18,23 @@ const VendorPortal: React.FC = () => {
   useEffect(() => {
     api.refresh?.();
     const sync = () => {
+      const all = api.getTrips();
+      // Only set allTrips if we're debugging/admin, but we need it for context
+      // setAllTrips(all); 
       const amb = api.getAmbulances().find(a => a.id === currentAmbulanceId) || null;
       setAmbulance(amb);
-      const trip = api.getTrips().find(t => t.ambulance_id === currentAmbulanceId && t.status !== TripStatus.COMPLETED) || null;
-      console.log('🚑 VENDOR SYNC:', { currentAmbulanceId, allTrips: api.getTrips(), foundTrip: trip });
-      setActiveTrip(trip);
+      
+      const trip = all.find(t => t.ambulance_id === currentAmbulanceId && t.status !== TripStatus.COMPLETED) || null;
+      console.log('🚑 VENDOR SYNC:', { currentAmbulanceId, allTripsCount: all.length, foundTrip: trip?.id, status: trip?.status });
+      
+      // Crucial: Only update if the object reference or properties actually changed
+      setActiveTrip(prev => {
+        if (!trip) return null;
+        if (!prev || prev.id !== trip.id || prev.status !== trip.status) {
+          return trip;
+        }
+        return prev;
+      });
     };
 
     sync();
@@ -77,9 +90,24 @@ const VendorPortal: React.FC = () => {
     };
   }, [currentAmbulanceId, batteryLevel]);
 
-  const updateStatus = (status: TripStatus) => {
+  const updateStatus = async (status: TripStatus) => {
     if (activeTrip) {
-      api.updateTripStatus(activeTrip.id, status);
+      console.log('Button clicked: updating status to', status);
+      try {
+        await api.updateTripStatus(activeTrip.id, status);
+        console.log('Status updated successfully');
+        
+        // Immediate local UI feedback to prevent button "stickiness"
+        setActiveTrip(prev => prev ? { ...prev, status } : null);
+        
+        // Refresh API state to ensure everything is synced
+        await api.refresh?.();
+      } catch (err) {
+        console.error('Status update failed:', err);
+        alert('Failed to update status. Please check connection.');
+      }
+    } else {
+      console.warn('No active trip to update');
     }
   };
 
@@ -128,6 +156,19 @@ const VendorPortal: React.FC = () => {
       </div>
 
       <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+        <div className="p-3 bg-slate-800 rounded-lg border border-slate-700">
+          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-2">Login as Unit:</label>
+          <select 
+            value={currentAmbulanceId}
+            onChange={(e) => setCurrentAmbulanceId(e.target.value)}
+            className="w-full bg-slate-900 text-white border border-slate-600 rounded px-2 py-1 text-xs"
+          >
+            {api.getAmbulances().map(a => (
+              <option key={a.id} value={a.id}>{a.id} - {a.driver_name}</option>
+            ))}
+          </select>
+        </div>
+
         {activeTrip ? (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
             {/* Map View - Show after clicking MARK ENROUTE */}
@@ -175,11 +216,11 @@ const VendorPortal: React.FC = () => {
                     <button 
                       onClick={() => {
                         setShowMap(true);
-                        updateStatus(TripStatus.ENROUTE);
+                        updateStatus(TripStatus.ENROUTE_TO_PICKUP);
                       }}
                       className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-black py-4 rounded-xl shadow-lg transition-all active:scale-95 text-lg"
                     >
-                      🗺️ MARK ENROUTE & SHOW MAP
+                      🗺️ MARK ENROUTE TO PICKUP
                     </button>
                     {!showMap && (
                       <button 
@@ -191,7 +232,7 @@ const VendorPortal: React.FC = () => {
                     )}
                   </>
                 )}
-                {activeTrip.status === TripStatus.ENROUTE && (
+                {activeTrip.status === TripStatus.ENROUTE_TO_PICKUP && (
                   <>
                     {!showMap && (
                       <button 
@@ -202,28 +243,33 @@ const VendorPortal: React.FC = () => {
                       </button>
                     )}
                     <button 
-                      onClick={() => updateStatus(TripStatus.ARRIVED)}
+                      onClick={() => updateStatus(TripStatus.ARRIVED_AT_PICKUP)}
                       className="w-full bg-rose-500 hover:bg-rose-600 text-white font-black py-4 rounded-xl shadow-lg transition-all active:scale-95 text-lg"
                     >
                       ARRIVED AT PICKUP
                     </button>
                   </>
                 )}
-                {activeTrip.status === TripStatus.ARRIVED && (
+                {activeTrip.status === TripStatus.ARRIVED_AT_PICKUP && (
                   <>
-                    {!showMap && (
-                      <button 
-                        onClick={() => setShowMap(true)}
-                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-black py-3 rounded-xl shadow-lg transition-all active:scale-95 text-sm mb-3"
-                      >
-                        📍 SHOW ROUTE TO HOSPITAL
-                      </button>
-                    )}
+                    <button 
+                      onClick={() => updateStatus(TripStatus.COMPLETED)}
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-xl shadow-lg transition-all active:scale-95 text-lg"
+                    >
+                      PATIENT PICKED UP & COMPLETE MISSION
+                    </button>
+                  </>
+                )}
+                {/* Statuses after PICKED_UP are now skipped to allow 2-click completion: Arrived -> Picked Up/Complete */}
+                {(activeTrip.status === TripStatus.PICKED_UP || 
+                  activeTrip.status === TripStatus.ENROUTE_TO_HOSPITAL || 
+                  activeTrip.status === TripStatus.ARRIVED_AT_HOSPITAL) && (
+                  <>
                     <button 
                       onClick={() => updateStatus(TripStatus.COMPLETED)}
                       className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-xl shadow-lg transition-all active:scale-95 text-lg"
                     >
-                      DELIVERED TO HOSPITAL
+                      MISSION COMPLETED
                     </button>
                   </>
                 )}
